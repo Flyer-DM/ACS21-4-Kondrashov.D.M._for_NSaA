@@ -1,5 +1,10 @@
 print('hello world')
-#some comments
+
+
 
 def bar():
     print('bar')
+
+
+def foo():
+    print('foo')
