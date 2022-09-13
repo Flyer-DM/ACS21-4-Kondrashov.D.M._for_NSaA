@@ -1,7 +1,4 @@
 print('hello world')
-
-
-
 def bar():
     print('bar')
 
