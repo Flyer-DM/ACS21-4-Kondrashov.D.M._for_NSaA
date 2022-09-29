@@ -25,19 +25,30 @@ while True:
         flag1 = not flag1
 
     conn, addr = sock.accept()  # получаем новый соккет и адрес клиента
-    print("Успешное соединение клиента:", addr[0])
-    f.write("Успешное соединение клиента:" + addr[0] + ' | ' + str(datetime.datetime.now()) + '\n')
-    conn.send("Слышу вас!".encode())
+    with open('clinets.txt', 'a+') as clients_list:
+        clients_list.seek(0, 0)
+        for line in clients_list:
+            if addr[0] in line:
+                conn.send(("Здравствуйте, " + line.replace(addr[0], '')).encode())
+                f.write("Подключение известного клиента: " + addr[0] + ' | ' + str(datetime.datetime.now()) + '\n')
+                break
+        else:
+            conn.send("Вы незарегистрированный пользователь! Введите ваше имя: ".encode())
+            name = conn.recv(1024).decode()
+            clients_list.write('\n' + addr[0] + name)
+            f.write("Запись нового клиента: " + addr[0] + ' | ' + str(datetime.datetime.now()) + '\n')
+    print("Успешное соединение клиента: " + addr[0])
+    f.write("Успешное соединение клиента: " + addr[0] + ' | ' + str(datetime.datetime.now()) + '\n')
 
     while True:
         data = conn.recv(1024)  # читаем данные по 1 Кб
-        message = data.decode()
+        message = data.decode()  # декодирование битов в текст
         if not message:
-            print('Отключение клиента:', addr[0])
-            f.write("Отключение клиента:" + addr[0] + ' | ' + str(datetime.datetime.now()) + '\n')
+            print('Отключение клиента: ', addr[0])
+            f.write("Отключение клиента: " + addr[0] + ' | ' + str(datetime.datetime.now()) + '\n')
             break
-        print("Полученное сообщение : ", message)
-        f.write("Полученное сообщение : " + message + ' | ' + str(datetime.datetime.now()) + '\n')
+        print("Полученное сообщение :", message)
+        f.write("Полученное сообщение: " + message + ' | ' + str(datetime.datetime.now()) + '\n')
         if message == 'shutdown':
             breaker = not breaker
             break
