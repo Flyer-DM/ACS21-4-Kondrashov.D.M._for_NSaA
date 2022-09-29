@@ -1,10 +1,19 @@
 import socket
 import datetime
+import random
 
 f = open('log.txt', 'w')
 
 sock = socket.socket()  # создание соккета
-sock.bind(('', 9090))  # хост общедоступный и порт
+average_port = 9090
+while True:
+    try:
+        sock.bind(('', average_port))
+        print("Используется порт: " + str(average_port))
+        break
+    except OSError as error:
+        print("{} (порт {} занят)".format(error, average_port))
+        average_port = random.randint(1024, 65535)
 
 flag1, breaker = True, False
 
