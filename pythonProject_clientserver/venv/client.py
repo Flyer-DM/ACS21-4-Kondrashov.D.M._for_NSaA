@@ -1,6 +1,19 @@
 import socket
 import re
 
+
+def sender(sock: socket.socket, message: str) -> None:
+    sock.send(bytearray(f'{len(message)}~{message}'.encode()))
+
+
+def reciever(sock: socket.socket, printable=True) -> str:
+    message = sock.recv(1024).decode()
+    message = message[message.index('~') + 1:]
+    if printable:
+        print(f"Получено сообщение от сервера: {message}")
+    return message
+
+
 sock = socket.socket()
 attempts, flag1, flag2 = 3, True, False  # флаги: количество попыток, номер порта
 
@@ -25,24 +38,25 @@ try:
     if flag1:
         print("Успешное подключение к серверу!")
         sock.connect((ip_add_server, port_server))  # имя хоста и номер порта
-        flag3 = sock.recv(1024).decode()
+        flag3 = reciever(sock, False)
         if flag3 == 'new':
         #  впервые подлючаюсь к серверу
-            print(sock.recv(1024).decode())  # имя пользователя
-            sock.send(input().encode())
-            print(sock.recv(1024).decode())  # пароль пользователя
-            sock.send(input().encode())
+            reciever(sock)  # имя пользователя
+            sender(sock, input())
+            reciever(sock)  # пароль пользователя
+            sender(sock, input())
         elif flag3 == 'known':
         #  повторное подключение (я известный пользователь)
-            print(sock.recv(1024).decode() + '\n' + sock.recv(1024).decode())  # приветствие по имени и запрос пароля)
+            reciever(sock)  # приветствие по имени и запрос пароля)
+            reciever(sock)
             while True:
-                sock.send(input().encode())  # отправка пароля
-                flag3 = sock.recv(1024).decode()  # получение флага, верен пароль или нет
+                sender(sock, input())  # отправка пароля
+                flag3 = reciever(sock, False)  # получение флага, верен пароль или нет
                 if flag3 == 'true':
-                    print(sock.recv(1024).decode())  # сервер подтверждает верность пароля
+                    reciever(sock)  # сервер подтверждает верность пароля
                     break
                 elif flag3 == 'false':
-                    print(sock.recv(1024).decode())  # если количество попыток исчерпано
+                    reciever(sock)  # если количество попыток исчерпано
                     break
                 else:
                     print(flag3)
@@ -50,7 +64,7 @@ try:
             while True:
                 message = input('Введите сообщение для сервера: ')
                 print("Отправление сообщения серверу...")
-                sock.send(message.encode())
+                sender(sock, message)
                 print("Сообщение успешно доставлено!")
                 if message in ('exit', 'shutdown'):
                     print('Закрытие соединения.')
